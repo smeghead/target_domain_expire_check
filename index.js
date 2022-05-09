@@ -1,13 +1,17 @@
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const whois = require('whois-light');
+const moment = require('moment');
 
 const check_expire = async domain => {
     console.log('whois execute!!!!!');
     const who = await whois.lookup({format: true}, domain.domain);
 
     console.log('who', who['Registry Expiry Date']);
-    domain.domain_expire = who['Registry Expiry Date'].replace(/T.*/, '');
+    domain.domain_expire = who['Registry Expiry Date'];
+
+    domain.last_checked = moment().format();
+
     return domain;
 };
 
@@ -34,3 +38,4 @@ exports.handler = async (event) => {
     };
     return response;
 };
+// vim: set expandtab ts=4 sts=4 sw=4:
