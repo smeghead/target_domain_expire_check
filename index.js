@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const whois = require('whois-light');
 const moment = require('moment');
+const ExpireAlert = require('./expire-alert');
 
 const check_expire = async domain => {
     console.log('whois execute!!!!!');
@@ -10,8 +11,14 @@ const check_expire = async domain => {
     console.log('who', who['Registry Expiry Date']);
     domain.domain_expire = who['Registry Expiry Date'];
 
-    domain.last_checked = moment().format();
+    const now = moment();
+    const expire_alert = new ExpireAlert(domain, now);
+    const alert_ = expire_alert.getAlert();
+    if (alert_.exists()) {
+        console.log('ALERT', alert_.getMessage());
+    }
 
+    domain.last_checked = moment().format();
     return domain;
 };
 
