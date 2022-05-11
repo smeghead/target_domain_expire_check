@@ -1,7 +1,7 @@
 const moment = require('moment');
 const ExpireAlert = require('./expire-alert');
 
-test('domain_expireが無いためアラートを出す', () => {
+test('expireが無いためアラートを出す', () => {
     const domain = {
         domain: 'example.com',
     };
@@ -11,10 +11,22 @@ test('domain_expireが無いためアラートを出す', () => {
     expect(result.exists()).toBe(true);
     expect(result.getMessage()).toBe('ドメインの有効期限が未取得です。example.com');
 });
-test('domain_expireが空アラートを出す', () => {
+test('expireがnullの場合、アラートを出す', () => {
     const domain = {
         domain: 'example.com',
-        domain_expire: '',
+        expire: null,
+        last_checked: '2022-04-24T13:49:26+00:00',
+    };
+    const now = moment('2022-04-27T13:49:26+00:00');
+    const expire_alert = new ExpireAlert(domain, now);
+    const result = expire_alert.getAlert();
+    expect(result.exists()).toBe(true);
+    expect(result.getMessage()).toBe('ドメインの有効期限が取得できませんでした。example.com');
+});
+test('expireが空の場合、アラートを出す', () => {
+    const domain = {
+        domain: 'example.com',
+        expire: '',
         last_checked: '2022-04-24T13:49:26+00:00',
     };
     const now = moment('2022-04-27T13:49:26+00:00');
@@ -26,7 +38,7 @@ test('domain_expireが空アラートを出す', () => {
 test('30日を切ったらアラートを出す', () => {
     const domain = {
         domain: 'example.com',
-        domain_expire: '2022-05-25T02:07:08Z',
+        expire: '2022-05-25T02:07:08Z',
         last_checked: '2022-04-24T13:49:26+00:00',
     };
     const now = moment('2022-04-27T13:49:26+00:00');
@@ -38,7 +50,7 @@ test('30日を切ったらアラートを出す', () => {
 test('30日を切ってなければアラートなし', () => {
     const domain = {
         domain: 'example.com',
-        domain_expire: '2022-05-25T02:07:08Z',
+        expire: '2022-05-25T02:07:08Z',
         last_checked: '2022-04-24T13:49:26+00:00',
     };
     const now = moment('2022-04-24T13:49:26+00:00');
@@ -49,7 +61,7 @@ test('30日を切ってなければアラートなし', () => {
 test('20日を切ったらアラートを出す', () => {
     const domain = {
         domain: 'example.com',
-        domain_expire: '2022-05-25T02:07:08Z',
+        expire: '2022-05-25T02:07:08Z',
         last_checked: '2022-05-01T13:49:26+00:00',
     };
     const now = moment('2022-05-05T13:49:26+00:00');
