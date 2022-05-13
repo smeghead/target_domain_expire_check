@@ -38,14 +38,11 @@ class ExpireAlert {
         const days = expire.diff(this.now, 'days');
 
         return this.checkDays(days_last, days, expire);
-        result.hasNotify = days < 30;
-        return result;
     }
 
     checkDays(days_last, days, expire) {
         const thresholds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 170];
         const matchThreshold = thresholds.find(threshold => {
-            console.log('days_last', days_last, 'days', days, 'threshold', threshold);
             if (days_last < threshold) {
                 return false;
             }
@@ -56,11 +53,7 @@ class ExpireAlert {
         }
         return new ExpireAlertResult(``);
     }
-    
-
-
 };
-
 
 module.exports = ExpireAlert;
 // vim: set expandtab ts=4 sts=4 sw=4:

@@ -5,6 +5,7 @@ const whois = require('whois-light');
 const checkCertExpiration = require('check-cert-expiration');
 const moment = require('moment');
 const ExpireAlert = require('./expire-alert');
+const WhoisParser = require('./whois-parser');
 
 const notify = async (messages) => {
     const email = process.env.NOTIFY_EMAIL;
@@ -29,9 +30,8 @@ const check_expire = async domain => {
     switch (domain.check_type) {
         case 'domain':
             const who = await whois.lookup({format: true}, domain.domain);
-
-            console.log('who', who['Registry Expiry Date']);
-            domain.expire = who['Registry Expiry Date'];
+            const whois_parser = new WhoisParser(who);
+            domain.expire = whois_parser.getExpire();
             break;
         case 'ssl':
             const result = await checkCertExpiration(domain.domain);
