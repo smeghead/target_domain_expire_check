@@ -7,14 +7,18 @@ const moment = require('moment');
 const { ExpireAlert, ExpireAlertResult } = require('./expire-alert');
 const WhoisParser = require('./whois-parser');
 
+const config = {
+    NOTIFY_EMAIL: process.env.NOTIFY_EMAIL,
+    DYNAMODB_TABLENAME: process.env.DYNAMODB_TABLENAME,
+};
+
 const notify = async (alerts) => {
-    const email = process.env.NOTIFY_EMAIL;
     if (ExpireAlertResult.empty(alerts)) {
         return;
     }
     const params = {
         Destination: {
-            ToAddresses: [email],
+            ToAddresses: [config.NOTIFY_EMAIL],
         },
         Message: {
             Body: {
@@ -23,13 +27,12 @@ const notify = async (alerts) => {
 
             Subject: { Data: 'ドメイン/SSL 有効期限チェック結果' },
         },
-        Source: email,
+        Source: config.NOTIFY_EMAIL,
     };
 
     await ses.sendEmail(params).promise();
 };
 const check_expire = async domain => {
-    console.log('whois execute!!!!!');
     switch (domain.check_type) {
         case 'domain':
             const who = await whois.lookup({format: true}, domain.domain);
@@ -58,8 +61,7 @@ const check_expire = async domain => {
 };
 
 exports.handler = async (event) => {
-    let body;
-    const target = await dynamo.scan({ TableName: "check_target" }).promise();
+    const target = await dynamo.scan({ TableName: config.DYNAMODB_TABLENAME }).promise();
 
     const alerts = [];
     await Promise.all(target.Items.map(async domain => {
@@ -68,13 +70,11 @@ exports.handler = async (event) => {
         console.log('result', result);
         await dynamo
             .put({
-                TableName: "check_target",
+                TableName: config.DYNAMODB_TABLENAME,
                 Item: result.Item,
             })
             .promise();
-        if (result.Alert.exists()) {
-            alerts.push(result.Alert);
-        }
+        alerts.push(result.Alert);
     }));
     console.log('put');
 
@@ -82,7 +82,7 @@ exports.handler = async (event) => {
 
     const response = {
         statusCode: 200,
-        body: JSON.stringify(body),
+        body: JSON.stringify(alerts),
     };
     return response;
 };
