@@ -13,7 +13,6 @@ class WhoisParser {
             return this.whois['Expiration Time'];
         }
         const raw = this.whois._raw;
-        console.log(raw);
         const lines = raw.split("\r\n");
 
         const regexps = [
@@ -33,6 +32,7 @@ class WhoisParser {
                 return expire.format();
             }
         }
+        console.log(raw);
         return '';
     }
 }

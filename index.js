@@ -4,21 +4,24 @@ const ses = new AWS.SES({ region: "ap-northeast-1" });
 const whois = require('whois-light');
 const checkCertExpiration = require('check-cert-expiration');
 const moment = require('moment');
-const ExpireAlert = require('./expire-alert');
+const { ExpireAlert, ExpireAlertResult } = require('./expire-alert');
 const WhoisParser = require('./whois-parser');
 
-const notify = async (messages) => {
+const notify = async (alerts) => {
     const email = process.env.NOTIFY_EMAIL;
+    if (ExpireAlertResult.empty(alerts)) {
+        return;
+    }
     const params = {
         Destination: {
             ToAddresses: [email],
         },
         Message: {
             Body: {
-                Text: { Data: messages.join("\n") },
+                Text: { Data: ExpireAlertResult.formatBody(alerts) },
             },
 
-            Subject: { Data: "Domain expire check result" },
+            Subject: { Data: 'ドメイン/SSL 有効期限チェック結果' },
         },
         Source: email,
     };
@@ -50,7 +53,7 @@ const check_expire = async domain => {
     domain.last_checked = moment().format();
     return {
         Item: domain,
-        Message: alert_.getMessage(),
+        Alert: alert_,
     };
 };
 
@@ -58,7 +61,7 @@ exports.handler = async (event) => {
     let body;
     const target = await dynamo.scan({ TableName: "check_target" }).promise();
 
-    const messages = [];
+    const alerts = [];
     await Promise.all(target.Items.map(async domain => {
         console.log(domain);
         const result = await check_expire(domain);
@@ -69,15 +72,14 @@ exports.handler = async (event) => {
                 Item: result.Item,
             })
             .promise();
-        if (result.Message) {
-            messages.push(result.Message);
+        if (result.Alert.exists()) {
+            alerts.push(result.Alert);
         }
     }));
     console.log('put');
 
-    if (messages.length > 0) {
-        await notify(messages);
-    }
+    await notify(alerts);
+
     const response = {
         statusCode: 200,
         body: JSON.stringify(body),
