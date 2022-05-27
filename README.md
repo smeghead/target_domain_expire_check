@@ -7,5 +7,24 @@
 
 * AWS Lambda
 * DynamoDB
-* AWS SES
+* Amazon SNS
 
+## 設定 ##
+
+### DynamoDB ###
+
+テーブルを作成します。
+
+以下の項目を含む
+
+* domain (string) パーティションキー
+* check_type (string) domain/ssl ソートキー
+
+### Lambda ###
+
+./make-zip.sh で作成したzipファイルをコードとしてアップロードします。
+
+Lambdaの環境変数に、以下を設定する必要があります。
+
+* TOPIC_ARN: SNSのトピックARN
+* DYNAMODB_TABLENAME: DynamoDBのテーブル名

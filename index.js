@@ -1,36 +1,29 @@
+const config = {
+    TOPIC_ARN: process.env.TOPIC_ARN,
+    DYNAMODB_TABLENAME: process.env.DYNAMODB_TABLENAME,
+};
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
-const ses = new AWS.SES({ region: "ap-northeast-1" });
+const sns = new AWS.SNS();
 const whois = require('whois-light');
 const checkCertExpiration = require('check-cert-expiration');
 const moment = require('moment');
 const { ExpireAlert, ExpireAlertResult } = require('./expire-alert');
 const WhoisParser = require('./whois-parser');
 
-const config = {
-    NOTIFY_EMAIL: process.env.NOTIFY_EMAIL,
-    DYNAMODB_TABLENAME: process.env.DYNAMODB_TABLENAME,
-};
 
 const notify = async (alerts) => {
     if (ExpireAlertResult.empty(alerts)) {
         return;
     }
     const params = {
-        Destination: {
-            ToAddresses: [config.NOTIFY_EMAIL],
-        },
-        Message: {
-            Body: {
-                Text: { Data: ExpireAlertResult.formatBody(alerts) },
-            },
-
-            Subject: { Data: 'ドメイン/SSL 有効期限チェック結果' },
-        },
-        Source: config.NOTIFY_EMAIL,
+        TopicArn: config.TOPIC_ARN,
+        Subject: 'ドメイン/SSL 有効期限チェック結果',
+        Message: ExpireAlertResult.formatBody(alerts),
     };
 
-    await ses.sendEmail(params).promise();
+    console.log('publish', params);
+    await sns.publish(params).promise();
 };
 const check_expire = async domain => {
     switch (domain.check_type) {
