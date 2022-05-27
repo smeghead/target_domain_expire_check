@@ -62,7 +62,7 @@ class ExpireAlert {
     }
 
     checkDays(days_last, days, expire) {
-        const thresholds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 60, 90, 170];
+        const thresholds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 60, 90, 120, 150];
         const matchThreshold = thresholds.find(threshold => {
             if (days_last < threshold) {
                 return false;
