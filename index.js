@@ -18,7 +18,7 @@ const notify = async (alerts) => {
     }
     const params = {
         TopicArn: config.TOPIC_ARN,
-        Subject: 'ドメイン/SSL 有効期限チェック結果',
+        Subject: '👺ドメイン/SSL 有効期限チェック結果',
         Message: ExpireAlertResult.formatBody(alerts),
     };
 
