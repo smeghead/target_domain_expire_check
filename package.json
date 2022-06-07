@@ -9,12 +9,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@smeghead7/whois-result-parser": "^0.0.5",
     "check-cert-expiration": "^3.1.0",
     "moment": "^2.29.3",
     "moment-guess": "^1.2.4",
     "whois-light": "^1.1.6"
   },
   "devDependencies": {
-    "jest": "^28.1.0"
+    "jest": "^28.1.1"
   }
 }

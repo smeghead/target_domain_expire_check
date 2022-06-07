@@ -9,7 +9,7 @@ const whois = require('whois-light');
 const checkCertExpiration = require('check-cert-expiration');
 const moment = require('moment');
 const { ExpireAlert, ExpireAlertResult } = require('./expire-alert');
-const WhoisParser = require('./whois-parser');
+const WhoisResultParser = require('@smeghead7/whois-result-parser');
 
 
 const notify = async (alerts) => {
@@ -28,9 +28,10 @@ const notify = async (alerts) => {
 const check_expire = async domain => {
     switch (domain.check_type) {
         case 'domain':
-            const who = await whois.lookup({format: true}, domain.domain);
-            const whois_parser = new WhoisParser(who);
-            domain.expire = whois_parser.getExpire();
+            const who = await whois.lookup(domain.domain);
+            const whois_parser = new WhoisResultParser(domain.domain, who);
+            const parser = whois_parser.parse();
+            domain.expire = parser.expirationDate;
             break;
         case 'ssl':
             const result = await checkCertExpiration(domain.domain);
